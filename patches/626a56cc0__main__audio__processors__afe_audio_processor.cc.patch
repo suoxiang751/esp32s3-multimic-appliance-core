@@ -1,0 +1,239 @@
+--- a/main/audio/processors/afe_audio_processor.cc
++++ b/main/audio/processors/afe_audio_processor.cc
+@@ -1,5 +1,6 @@
+ #include "afe_audio_processor.h"
+ #include <esp_log.h>
++#include <sstream>
+ 
+ #define PROCESSOR_RUNNING 0x01
+ 
+@@ -20,12 +21,17 @@
+     int ref_num = codec_->input_reference() ? 1 : 0;
+ 
+     std::string input_format;
+-    for (int i = 0; i < codec_->input_channels() - ref_num; i++) {
+-        input_format.push_back('M');
+-    }
+-    for (int i = 0; i < ref_num; i++) {
+-        input_format.push_back('R');
+-    }
++    if (codec_->input_reference() && codec_->input_channels() == 4) {
++        input_format = "RMNM";
++    } else {
++        for (int i = 0; i < codec_->input_channels() - ref_num; i++) {
++            input_format.push_back('M');
++        }
++        for (int i = 0; i < ref_num; i++) {
++            input_format.push_back('R');
++        }
++    }
++    ESP_LOGI(TAG, "AFE input format: %s", input_format.c_str());
+ 
+     srmodel_list_t *models;
+     if (models_list == nullptr) {
+@@ -34,31 +40,58 @@
+         models = models_list;
+     }
+ 
+-    char* ns_model_name = esp_srmodel_filter(models, ESP_NSNET_PREFIX, NULL);
+-    char* vad_model_name = esp_srmodel_filter(models, ESP_VADN_PREFIX, NULL);
+-    
+-    afe_config_t* afe_config = afe_config_init(input_format.c_str(), NULL, AFE_TYPE_VC, AFE_MODE_HIGH_PERF);
+-    afe_config->aec_mode = AEC_MODE_VOIP_HIGH_PERF;
++    char* vad_model_name = nullptr;
++    char* wakenet_model_name = nullptr;
++    if (models != nullptr && models->num != -1) {
++        vad_model_name = esp_srmodel_filter(models, ESP_VADN_PREFIX, NULL);
++        wakenet_model_name = esp_srmodel_filter(models, ESP_WN_PREFIX, NULL);
++    } else {
++        ESP_LOGE(TAG, "Speech models are unavailable; WakeNet will be disabled");
++    }
++
++    if (wakenet_model_name != nullptr) {
++        const char* words = esp_srmodel_get_wake_words(models, wakenet_model_name);
++        if (words != nullptr) {
++            std::stringstream stream(words);
++            std::string word;
++            while (std::getline(stream, word, ';')) {
++                if (!word.empty()) {
++                    wake_words_.push_back(word);
++                }
++            }
++        }
++    }
++
++    // Listening uses a single SR AFE for both enhanced uplink audio and WakeNet.
++    // With RMNM this keeps both microphones in the SE/BSS path while still using
++    // MIC3 (the R channel) for high-performance echo cancellation.
++    const bool dual_mic = input_format.find('M') != input_format.rfind('M');
++    afe_config_t* afe_config = afe_config_init(
++        input_format.c_str(), models, AFE_TYPE_SR, AFE_MODE_HIGH_PERF);
++    afe_config->aec_mode = AEC_MODE_SR_HIGH_PERF;
++    afe_config->aec_filter_length = 4;
++    afe_config->se_init = dual_mic;
++    // On a two-microphone SR pipeline ESP-SR prioritizes SE/BSS over NSNet2.
++    // Explicitly keep NS off so config checking cannot silently drop dual-mic SE.
++    afe_config->ns_init = false;
++    afe_config->wakenet_init = wakenet_model_name != nullptr;
++    afe_config->wakenet_model_name = wakenet_model_name;
++    afe_config->wakenet_mode = DET_MODE_90;
++    // Keep the AFE worker off audio_input's core and above background tasks.
++    afe_config->afe_perferred_core = 1;
++    afe_config->afe_perferred_priority = 5;
+     afe_config->vad_mode = VAD_MODE_0;
+     afe_config->vad_min_noise_ms = 100;
+     if (vad_model_name != nullptr) {
+         afe_config->vad_model_name = vad_model_name;
+     }
+ 
+-    if (ns_model_name != nullptr) {
+-        afe_config->ns_init = true;
+-        afe_config->ns_model_name = ns_model_name;
+-        afe_config->afe_ns_mode = AFE_NS_MODE_NET;
+-    } else {
+-        afe_config->ns_init = false;
+-    }
+-
+     afe_config->agc_init = false;
+     afe_config->memory_alloc_mode = AFE_MEMORY_ALLOC_MORE_PSRAM;
+ 
+ #ifdef CONFIG_USE_DEVICE_AEC
+-    afe_config->aec_init = true;
+-    afe_config->vad_init = false;
++    afe_config->aec_init = codec_->input_reference();
++    afe_config->vad_init = !codec_->input_reference();
+ #else
+     afe_config->aec_init = false;
+     afe_config->vad_init = true;
+@@ -66,12 +99,29 @@
+ 
+     afe_iface_ = esp_afe_handle_from_config(afe_config);
+     afe_data_ = afe_iface_->create_from_config(afe_config);
++    afe_config_print(afe_config);
++
++    if (dual_mic && afe_config->se_init) {
++        ESP_LOGI(TAG, "Dual-mic SE/BSS enabled (format: %s)", input_format.c_str());
++    } else if (dual_mic) {
++        ESP_LOGE(TAG, "ESP-SR disabled dual-mic SE/BSS during configuration check");
++    }
++
++    wakenet_available_ = afe_data_ != nullptr && afe_config->wakenet_init;
++    if (wakenet_available_) {
++        // The processor is created before Listening starts. Keep WakeNet idle
++        // until EnableWakeWordDetection(true) selects it for the current state.
++        afe_iface_->disable_wakenet(afe_data_);
++        ESP_LOGI(TAG, "Integrated WakeNet ready: %s", wakenet_model_name);
++    } else {
++        ESP_LOGE(TAG, "Integrated WakeNet is unavailable");
++    }
+     
+     xTaskCreate([](void* arg) {
+         auto this_ = (AfeAudioProcessor*)arg;
+         this_->AudioProcessorTask();
+         vTaskDelete(NULL);
+-    }, "audio_communication", 4096, this, 3, NULL);
++    }, "audio_communication", 4096, this, 4, NULL);
+ }
+ 
+ AfeAudioProcessor::~AfeAudioProcessor() {
+@@ -112,12 +162,17 @@
+ 
+ void AfeAudioProcessor::Stop() {
+     xEventGroupClearBits(event_group_, PROCESSOR_RUNNING);
++    if (wakenet_enabled_.exchange(false) && wakenet_available_) {
++        afe_iface_->disable_wakenet(afe_data_);
++    }
++
++    // Mark the current fetch result stale before waiting for any buffer lock.
++    reset_pending_.store(true);
++    control_generation_.fetch_add(1);
+ 
+     std::lock_guard<std::mutex> lock(input_buffer_mutex_);
+-    if (afe_data_ != nullptr) {
+-        afe_iface_->reset_buffer(afe_data_);
+-    }
+     input_buffer_.clear();
++    // reset_buffer() must be serialized with fetch_with_delay().
+ }
+ 
+ bool AfeAudioProcessor::IsRunning() {
+@@ -130,6 +185,30 @@
+ 
+ void AfeAudioProcessor::OnVadStateChange(std::function<void(bool speaking)> callback) {
+     vad_state_change_callback_ = callback;
++}
++
++void AfeAudioProcessor::OnWakeWordDetected(
++        std::function<void(const std::string& wake_word)> callback) {
++    wake_word_detected_callback_ = callback;
++}
++
++void AfeAudioProcessor::EnableWakeWordDetection(bool enable) {
++    if (!wakenet_available_) {
++        if (enable) {
++            ESP_LOGW(TAG, "Integrated WakeNet is unavailable");
++        }
++        return;
++    }
++
++    bool was_enabled = wakenet_enabled_.exchange(enable);
++    if (enable && !was_enabled) {
++        if (afe_iface_->enable_wakenet(afe_data_) < 0) {
++            wakenet_enabled_.store(false);
++            ESP_LOGE(TAG, "Failed to enable integrated WakeNet");
++        }
++    } else if (!enable && was_enabled) {
++        afe_iface_->disable_wakenet(afe_data_);
++    }
+ }
+ 
+ void AfeAudioProcessor::AudioProcessorTask() {
+@@ -141,8 +220,24 @@
+     while (true) {
+         xEventGroupWaitBits(event_group_, PROCESSOR_RUNNING, pdFALSE, pdTRUE, portMAX_DELAY);
+ 
++        if (reset_pending_.exchange(false)) {
++            std::lock_guard<std::mutex> lock(input_buffer_mutex_);
++            input_buffer_.clear();
++            output_buffer_.clear();
++            afe_iface_->reset_buffer(afe_data_);
++        }
++        if (!IsRunning()) {
++            continue;
++        }
++
++        const auto generation = control_generation_.load();
++        if (reset_pending_.load()) {
++            continue;
++        }
++
+         auto res = afe_iface_->fetch_with_delay(afe_data_, portMAX_DELAY);
+-        if ((xEventGroupGetBits(event_group_) & PROCESSOR_RUNNING) == 0) {
++        if (generation != control_generation_.load() || reset_pending_.load() ||
++                (xEventGroupGetBits(event_group_) & PROCESSOR_RUNNING) == 0) {
+             continue;
+         }
+         if (res == nullptr || res->ret_value == ESP_FAIL) {
+@@ -150,6 +245,22 @@
+                 ESP_LOGI(TAG, "Error code: %d", res->ret_value);
+             }
+             continue;
++        }
++
++        if (wakenet_enabled_.load() && res->wakeup_state == WAKENET_DETECTED) {
++            wakenet_enabled_.store(false);
++            afe_iface_->disable_wakenet(afe_data_);
++
++            std::string wake_word = "wake_word";
++            const int word_index = res->wake_word_index - 1;
++            if (word_index >= 0 && word_index < static_cast<int>(wake_words_.size())) {
++                wake_word = wake_words_[word_index];
++            }
++            ESP_LOGI(TAG, "Wake word detected on microphone channel %d: %s",
++                     res->trigger_channel_id, wake_word.c_str());
++            if (wake_word_detected_callback_) {
++                wake_word_detected_callback_(wake_word);
++            }
+         }
+ 
+         // VAD state change

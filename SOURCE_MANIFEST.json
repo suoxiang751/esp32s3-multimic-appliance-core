@@ -1,0 +1,119 @@
+{
+  "source": "Customer-application snapshots 76ed7e282 and be237ffbb; main SDK application a8e10e80f; public upstream changes are patches only.",
+  "files": [
+    {
+      "file": "src/protocol/mcu_protocol.cc",
+      "source_filename": "mcu_protocol.cc",
+      "source_sha256": "80e463540891e71f04d2d48498521bbc13ce5186c9b23edb803651e3637b2a0d",
+      "published_sha256": "3632097845c1ad07e2e6c5e72e0ef112ad87bb13cd5d8a42d7feacc28a836770",
+      "adaptation": [
+        "line endings normalized only"
+      ]
+    },
+    {
+      "file": "src/protocol/mcu_protocol.h",
+      "source_filename": "mcu_protocol.h",
+      "source_sha256": "5ad000cf3b8bffbd12ef98a722fa3f6ddcb8a64c911048a681fe35e679cbf8a9",
+      "published_sha256": "a8613f601fe5ac3a218d6eb6757c19c8c826d3f9525c1c8cf572c4579a355fad",
+      "adaptation": [
+        "line endings normalized only"
+      ]
+    },
+    {
+      "file": "integration/water_dispenser/mcu_dp.cc",
+      "source_filename": "mcu_dp.cc",
+      "source_sha256": "57fe5f59c04a51c2824f40da193632ceaf968f46dccee7e450b09f1f1aeea1b9",
+      "published_sha256": "3b4cd3337aa55fa4ff4073de0929e7b1b3e412d75c40f37aa124d6f4632a2e70",
+      "adaptation": [
+        "line endings normalized only"
+      ]
+    },
+    {
+      "file": "integration/water_dispenser/mcu_dp.h",
+      "source_filename": "mcu_dp.h",
+      "source_sha256": "512e0f543d610d98bd6bade9e84ba3e4be0df36ededecc3b07af7a665c5c237a",
+      "published_sha256": "25371e79813d288ef626627dfc854f8e8361ae5bef355cf12e64dbc9402aeec4",
+      "adaptation": [
+        "line endings normalized only"
+      ]
+    },
+    {
+      "file": "integration/water_dispenser/mcp_tools.cc",
+      "source_filename": "mcp.cc",
+      "source_sha256": "bcb092dfb32e9acac142152decc1f8a69c253bad55412c904d9257f52af92aa8",
+      "published_sha256": "8b441b8403b3975814ebb7cf197e97b78ebd41d0175686572439c570049a7432",
+      "adaptation": [
+        "C208: replaced 9 occurrence(s)"
+      ]
+    },
+    {
+      "file": "integration/ice_maker/mcu_protocol.cc",
+      "source_filename": "mcu_protocol.cc",
+      "source_sha256": "fbffce6084c75862aef03cc4831534637f98b44b45baa9e45442b473525e0415",
+      "published_sha256": "ac5d0065d7b780dc9757e36bbfecba251dc6ca9d50a8329bb6734b63cd81ff4d",
+      "adaptation": [
+        "line endings normalized only"
+      ]
+    },
+    {
+      "file": "integration/ice_maker/mcu_protocol.h",
+      "source_filename": "mcu_protocol.h",
+      "source_sha256": "8635116b95db28311737542923b6df236cb0e594062d104572137710e6c80faa",
+      "published_sha256": "3bedb5439b5c550f48b61176cd46b820f4616f004ad3a6be22bd93022fe748a8",
+      "adaptation": [
+        "惠康: replaced 1 occurrence(s)"
+      ]
+    },
+    {
+      "file": "integration/ice_maker/mcu_dp.cc",
+      "source_filename": "mcu_dp.cc",
+      "source_sha256": "8190bc642c89e12c10df7b9f45bae47a67a6d9bef3b341a502dbdaca441fac36",
+      "published_sha256": "2fc428efcefdcd8687b6baf3d52e12ef53598bb899d6d97bfcc0a7149fdf3bea",
+      "adaptation": [
+        "line endings normalized only"
+      ]
+    },
+    {
+      "file": "integration/ice_maker/mcu_dp.h",
+      "source_filename": "mcu_dp.h",
+      "source_sha256": "876bd63f1540d5b69d1eea86faa1aaeef46d083c93db89402ab4ca3b9c4fcf3c",
+      "published_sha256": "e5592659c38c0092c06c0aa975737985c0fbd7d598feba9814f781beca3ead2c",
+      "adaptation": [
+        "line endings normalized only"
+      ]
+    },
+    {
+      "file": "integration/ice_maker/mcp_tools.cc",
+      "source_filename": "mcp.cc",
+      "source_sha256": "2df8cf14721f4d09c4407b5a3230c05ffd3b3032bf0387c7829814cc485b2bf2",
+      "published_sha256": "21ac4b9027ad6cdae72661baef13417e4db97a357ba3446490dcfdaee1595a69",
+      "adaptation": [
+        "line endings normalized only"
+      ]
+    },
+    {
+      "file": "integration/factory/potek_factory_test.cc",
+      "source_filename": "potek_factory_test.cc",
+      "source_sha256": "34e815e4f792cd88562f141f9b49d5e71382aab54ab390292c3d3437c83cb388",
+      "published_sha256": "0daa78383abfe71dceb86976550b82d7256f95f9fc051ffcce4322616dde6ccd",
+      "adaptation": [
+        "line endings normalized only"
+      ]
+    },
+    {
+      "file": "integration/factory/potek_factory_test.h",
+      "source_filename": "potek_factory_test.h",
+      "source_sha256": "63224a2a70ca3c14d76efb0f9c482c04939885e0ee51cf6839da0dd55be178b1",
+      "published_sha256": "473d7715072d31b1ca3a08deec5d56001e6797a5d72cbf17ba02095404c5c6c6",
+      "adaptation": [
+        "4d-ai.chat: replaced 1 occurrence(s)",
+        "factory credential macros replaced: 3"
+      ]
+    }
+  ],
+  "publication_notes": [
+    "Original application logic retained; customer label strings and line endings adapted for publication.",
+    "Host tests and documentation were added during portfolio extraction, not asserted to be original product artifacts.",
+    "No full SDK, cloud credentials, customer documents, media, firmware binary or original repository history included."
+  ]
+}

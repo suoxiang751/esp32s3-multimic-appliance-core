@@ -1,0 +1,51 @@
+--- a/main/audio/processors/afe_audio_processor.h
++++ b/main/audio/processors/afe_audio_processor.h
+@@ -2,6 +2,7 @@
+ #define AFE_AUDIO_PROCESSOR_H
+ 
+ #include <esp_afe_sr_models.h>
++#include <esp_wn_models.h>
+ #include <freertos/FreeRTOS.h>
+ #include <freertos/task.h>
+ #include <freertos/event_groups.h>
+@@ -10,6 +11,7 @@
+ #include <vector>
+ #include <functional>
+ #include <mutex>
++#include <atomic>
+ 
+ #include "audio_processor.h"
+ #include "audio_codec.h"
+@@ -26,6 +28,8 @@
+     bool IsRunning() override;
+     void OnOutput(std::function<void(std::vector<int16_t>&& data)> callback) override;
+     void OnVadStateChange(std::function<void(bool speaking)> callback) override;
++    void OnWakeWordDetected(std::function<void(const std::string& wake_word)> callback);
++    void EnableWakeWordDetection(bool enable);
+     size_t GetFeedSize() override;
+     void EnableDeviceAec(bool enable) override;
+ 
+@@ -35,14 +39,21 @@
+     esp_afe_sr_data_t* afe_data_ = nullptr;
+     std::function<void(std::vector<int16_t>&& data)> output_callback_;
+     std::function<void(bool speaking)> vad_state_change_callback_;
++    std::function<void(const std::string& wake_word)> wake_word_detected_callback_;
+     AudioCodec* codec_ = nullptr;
+     int frame_samples_ = 0;
+     bool is_speaking_ = false;
+     std::vector<int16_t> input_buffer_;
+     std::mutex input_buffer_mutex_;
++    std::atomic_bool reset_pending_{false};
++    std::atomic_uint control_generation_{0};
+     std::vector<int16_t> output_buffer_;
++
++    bool wakenet_available_ = false;
++    std::atomic_bool wakenet_enabled_{false};
++    std::vector<std::string> wake_words_;
+ 
+     void AudioProcessorTask();
+ };
+ 
+-#endif 
+\ No newline at end of file
++#endif

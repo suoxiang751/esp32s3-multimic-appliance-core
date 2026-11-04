@@ -1,0 +1,13 @@
+.host-build/
+__pycache__/
+*.pyc
+build/
+managed_components/
+sdkconfig
+sdkconfig.old
+.env
+*.bin
+*.elf
+*.map
+*.pem
+*.key

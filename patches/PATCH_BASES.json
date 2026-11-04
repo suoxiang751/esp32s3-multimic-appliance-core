@@ -1,0 +1,52 @@
+[
+  {
+    "base_tag": "v2.2.3",
+    "base_commit": "b34a9b19baebfa17d8fcaa0ed494444aaba174e5",
+    "patches": [
+      {
+        "file": "patches/626a56cc0__main__audio__audio_service.cc.patch",
+        "sha256": "f66018c5977d8f2e9db795ccf14b55430d5ef75623c73ed85f0657e63cd184d9"
+      },
+      {
+        "file": "patches/626a56cc0__main__audio__audio_service.h.patch",
+        "sha256": "a145984dd4a7220b0816dc413a54218e7394a0f35145741efbddf6851bd3561a"
+      },
+      {
+        "file": "patches/626a56cc0__main__audio__codecs__box_audio_codec.cc.patch",
+        "sha256": "790dc6abfcc7489aad1b16c23df386365c14838f8099c7553183db80498cc201"
+      },
+      {
+        "file": "patches/626a56cc0__main__audio__codecs__box_audio_codec.h.patch",
+        "sha256": "eab29005b8672c78439b721fc7df809670b39a8e00d10d51836f7cf15f421e12"
+      },
+      {
+        "file": "patches/626a56cc0__main__audio__processors__afe_audio_processor.cc.patch",
+        "sha256": "98aed9044986553977e6755db6e42946a36771a63b5624f501ea5bed471ea352"
+      },
+      {
+        "file": "patches/626a56cc0__main__audio__processors__afe_audio_processor.h.patch",
+        "sha256": "66ee76047e308fbbc7b78cdfc844e57a82ffd357397ac5d3bdc18df93af49b5d"
+      },
+      {
+        "file": "patches/626a56cc0__main__idf_component.yml.patch",
+        "sha256": "9eb201cfbdeb1d8d430535d1acbddae58a0d23c9794651d8059cb4ec27a91da2"
+      }
+    ],
+    "check": "git apply --check passed; not a firmware build"
+  },
+  {
+    "base_tag": "v2.5.0",
+    "base_commit": "ac6deed3d8e75348475364bf40ad953c6cd48054",
+    "patches": [
+      {
+        "file": "patches/76ed7e282__main__audio__engines__afe_audio_engine.cc.patch",
+        "sha256": "21909bb3e52a670ea639d498387cf729dffdf584c9baf51245042a7065ecdd18"
+      },
+      {
+        "file": "patches/76ed7e282__scripts__build_default_assets.py.patch",
+        "sha256": "c98cea02d393f7fc904c0274ddcce1266114482e409ad86c3d2eb15cb4a49f4f"
+      }
+    ],
+    "check": "git apply --check passed; not a firmware build"
+  }
+]

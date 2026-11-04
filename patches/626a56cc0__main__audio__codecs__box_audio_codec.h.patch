@@ -1,0 +1,17 @@
+--- a/main/audio/codecs/box_audio_codec.h
++++ b/main/audio/codecs/box_audio_codec.h
+@@ -5,11 +5,14 @@
+ 
+ #include <esp_codec_dev.h>
+ #include <esp_codec_dev_defaults.h>
++#include <cstdint>
+ #include <mutex>
++#include <vector>
+ 
+ 
+ class BoxAudioCodec : public AudioCodec {
+ private:
++    std::vector<int32_t> write_stereo_buf_;
+     const audio_codec_data_if_t* data_if_ = nullptr;
+     const audio_codec_ctrl_if_t* out_ctrl_if_ = nullptr;
+     const audio_codec_if_t* out_codec_if_ = nullptr;

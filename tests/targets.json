@@ -1,0 +1,14 @@
+[
+  {
+    "name": "mcu_protocol",
+    "cpp": true,
+    "includes": [
+      "tests/ports",
+      "src/protocol"
+    ],
+    "sources": [
+      "tests/test_mcu_protocol.cc",
+      "src/protocol/mcu_protocol.cc"
+    ]
+  }
+]
